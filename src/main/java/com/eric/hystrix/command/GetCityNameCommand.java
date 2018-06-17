@@ -1,6 +1,6 @@
 package com.eric.hystrix.command;
 
-import com.eric.hystrix.Cache.CityCache;
+import com.eric.hystrix.cache.CityCache;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;

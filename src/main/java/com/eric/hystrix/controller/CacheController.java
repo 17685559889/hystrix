@@ -123,5 +123,27 @@ public class CacheController {
 		return "success";
 	}
 	
-	
+	/**
+	 * 对于一次请求的重复数据走hystrix请求缓存
+	 * 不再重复执行相关查询方法
+	 * 如productids=1,1,2,3,1,3
+	 * @param productIds
+	 * @return
+	 */
+	@RequestMapping("getProductInfosWithRequestCache")
+	@ResponseBody
+	public String getProductInfosWithRequestCache(String productIds) {
+		try {
+			for(String productId : productIds.split(",")) {
+				GetProductInfoCommand command = new GetProductInfoCommand(Long.valueOf(productId));
+				ProductInfo product = command.execute();
+				System.out.println(product);
+				System.out.println("是否从hystrix请求上下文缓存中获取数据:" + command.isResponseFromCache());
+			}
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+			return "fail:" + e.getMessage();
+		}
+		return "success";
+	}
 }

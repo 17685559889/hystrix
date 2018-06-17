@@ -40,5 +40,10 @@ public class GetProductInfoCommand extends HystrixCommand<ProductInfo>{
 		String productJson = HttpClientUtils.sendGetRequest(url);
 		return JSONObject.parseObject(productJson, ProductInfo.class);
 	}
+	
+	@Override
+	protected String getCacheKey() {
+		return "product_info_" + productId;
+	}
 
 }
