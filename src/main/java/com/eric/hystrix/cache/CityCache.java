@@ -1,4 +1,4 @@
-package com.eric.hystrix.Cache;
+package com.eric.hystrix.cache;
 
 import java.util.HashMap;
 import java.util.Map;
