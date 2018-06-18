@@ -32,6 +32,7 @@ public class ProductController {
 		product.setModifiedTime("2018-06-06 10:00:00");
 		product.setShopId(1L);
 		product.setCityId(1L);
+		product.setBrandId(1L);
 		return product;
 	}
 }

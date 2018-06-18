@@ -19,6 +19,8 @@ public class ProductInfo {
 	private String modifiedTime;
 	private Long cityId;
 	private String cityName;
+	private Long brandId;
+	private String brandName;
 	
 	public ProductInfo() {
 		
@@ -114,15 +116,29 @@ public class ProductInfo {
 	public void setCityName(String cityName) {
 		this.cityName = cityName;
 	}
+	
+	public Long getBrandId() {
+		return brandId;
+	}
+
+	public void setBrandId(Long brandId) {
+		this.brandId = brandId;
+	}
+
+	public String getBrandName() {
+		return brandName;
+	}
+
+	public void setBrandName(String brandName) {
+		this.brandName = brandName;
+	}
 
 	@Override
 	public String toString() {
-		return "ProductInfo [id=" + id + ", name=" + name + ", price=" + price
-				+ ", pictureList=" + pictureList + ", specification="
-				+ specification + ", service=" + service + ", color=" + color
-				+ ", size=" + size + ", shopId=" + shopId + ", modifiedTime="
-				+ modifiedTime + ", cityId=" + cityId + ", cityName="
-				+ cityName + "]";
+		return "ProductInfo [id=" + id + ", name=" + name + ", price=" + price + ", pictureList=" + pictureList
+				+ ", specification=" + specification + ", service=" + service + ", color=" + color + ", size=" + size
+				+ ", shopId=" + shopId + ", modifiedTime=" + modifiedTime + ", cityId=" + cityId + ", cityName="
+				+ cityName + ", brandId=" + brandId + ", brandName=" + brandName + "]";
 	}
-	
+
 }

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.eric.hystrix.command.GetBrandNameCommand;
 import com.eric.hystrix.command.GetCityNameCommand;
 import com.eric.hystrix.command.GetProductInfoCommand;
 import com.eric.hystrix.command.GetProductInfosCommand;
@@ -143,6 +144,26 @@ public class CacheController {
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
 			return "fail:" + e.getMessage();
+		}
+		return "success";
+	}
+	
+	@RequestMapping("getProductInfoUseFallback")
+	@ResponseBody
+	public String getProductInfoUseFallback(Long productId) {
+		HystrixCommand<ProductInfo> command1 = new GetProductInfoCommand(productId);
+		//同步调用command中的run方法
+		ProductInfo productInfo;
+		try {
+			productInfo = command1.execute();
+			Long brandId = productInfo.getBrandId();
+			HystrixCommand<String> command2 = new GetBrandNameCommand(brandId);
+			String brandName = command2.execute();
+			productInfo.setBrandName(brandName);
+			System.out.println(productInfo);
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "fail";
 		}
 		return "success";
 	}
