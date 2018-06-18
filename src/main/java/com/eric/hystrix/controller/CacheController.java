@@ -10,6 +10,7 @@ import com.eric.hystrix.command.GetBrandNameCommand;
 import com.eric.hystrix.command.GetCityNameCommand;
 import com.eric.hystrix.command.GetProductInfoCommand;
 import com.eric.hystrix.command.GetProductInfosCommand;
+import com.eric.hystrix.command.GetProductTestCircuitBreakerCommand;
 import com.eric.hystrix.model.ProductInfo;
 import com.eric.hystrix.utils.HttpClientUtils;
 import com.netflix.hystrix.HystrixCommand;
@@ -165,6 +166,15 @@ public class CacheController {
 			e.printStackTrace();
 			return "fail";
 		}
+		return "success";
+	}
+	
+	@RequestMapping("getProductInfoTestCircuitBreaker")
+	@ResponseBody
+	public String getProductInfoTestCircuitBreaker(Long productId) {
+		HystrixCommand<ProductInfo> command = new GetProductTestCircuitBreakerCommand(productId);
+		ProductInfo productInfo = command.execute();
+		System.out.println(productInfo);
 		return "success";
 	}
 }
