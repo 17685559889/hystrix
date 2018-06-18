@@ -3,11 +3,11 @@ package com.eric.hystrix.test;
 import com.eric.hystrix.utils.HttpClientUtils;
 
 /**
- * 模拟断路器打开进行服务降级
+ * 断路器打开进行服务降级的实验
  * @author pxl
  *
  */
-public class HystrixCircuitBreakerTest {
+public class CircuitBreakerTest {
 	
 	public static void main(String[] args) {
 		String url = "http://localhost:8081/cache/getProductInfoTestCircuitBreaker?productId=";
@@ -20,7 +20,7 @@ public class HystrixCircuitBreakerTest {
 			HttpClientUtils.sendGetRequest(url + "-1");
 		}
 		try {
-			System.out.println("============模拟经过3秒的时间窗口================");
+			System.out.println("============模拟经过command中配置的3秒的时间窗口================");
 			Thread.sleep(3 * 1000);
 		} catch (InterruptedException e) {
 			e.printStackTrace();

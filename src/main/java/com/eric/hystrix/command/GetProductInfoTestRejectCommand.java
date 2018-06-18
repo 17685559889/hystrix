@@ -6,29 +6,32 @@ import com.eric.hystrix.utils.HttpClientUtils;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandProperties;
+import com.netflix.hystrix.HystrixThreadPoolProperties;
 
 /**
- * 测试短路器的command
- * 达到条件后快速熔断
- * 断路器打开的条件:
- * 1.一个时间窗口期经过断路器的流量达到设定水平
- * 2.失败流量的比例达到设定水平
+ * 测试接口限流的command
+ * 
  * @author pxl
  *
  */
-public class GetProductTestCircuitBreakerCommand extends HystrixCommand<ProductInfo> {
+public class GetProductInfoTestRejectCommand extends HystrixCommand<ProductInfo> {
 
 	private Long productId;
-	
-	public GetProductTestCircuitBreakerCommand(Long productId) {
-		super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("GetProductTestCircuitBreakerGroup"))
+
+	public GetProductInfoTestRejectCommand(Long productId) {
+		super(Setter.withGroupKey(HystrixCommandGroupKey.Factory.asKey("getProductInfoTestRejectGroup"))
+				.andThreadPoolPropertiesDefaults(HystrixThreadPoolProperties.Setter()
+						 //线程池大小
+						.withCoreSize(10)
+						 //最大等待队列大小
+						.withMaxQueueSize(12)
+						//队列中的等待数量超过该值则被限流进行降级,该值若大于最大等待队列,则使用最大等待队列的值
+						.withQueueSizeRejectionThreshold(8)) 
 				.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-						//熔断器在整个统计时间内是否开启的阀值，默认20。也就是10秒钟内至少请求20次，熔断器才发挥起作用
-						.withCircuitBreakerRequestVolumeThreshold(30)
-						//当出错率超过50%后熔断器启动,默认:50。
-						.withCircuitBreakerErrorThresholdPercentage(40)
-						//熔断器默认工作时间,默认:5秒.熔断器中断请求5秒后会关闭重试,如果请求仍然失败,继续打开熔断器5秒,如此循环
-						.withCircuitBreakerSleepWindowInMilliseconds(3000)));
+						//timeout时长
+						.withExecutionTimeoutInMilliseconds(5000)
+						//进行降级的最大并发数
+						.withFallbackIsolationSemaphoreMaxConcurrentRequests(30)));
 		this.productId = productId;
 	}
 
@@ -41,7 +44,7 @@ public class GetProductTestCircuitBreakerCommand extends HystrixCommand<ProductI
 		String productJson = HttpClientUtils.sendGetRequest(url);
 		return JSONObject.parseObject(productJson, ProductInfo.class);
 	}
-	
+
 	@Override
 	protected ProductInfo getFallback() {
 		ProductInfo productInfo = new ProductInfo();
@@ -49,4 +52,5 @@ public class GetProductTestCircuitBreakerCommand extends HystrixCommand<ProductI
 		productInfo.setName("降级商品");
 		return productInfo;
 	}
+
 }
