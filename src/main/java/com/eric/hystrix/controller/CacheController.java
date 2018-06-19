@@ -1,11 +1,14 @@
 package com.eric.hystrix.controller;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Future;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import com.eric.hystrix.collapser.GetProductInfosCollapser;
 import com.eric.hystrix.command.GetBrandNameCommand;
 import com.eric.hystrix.command.GetCityNameCommand;
 import com.eric.hystrix.command.GetProductInfoCommand;
@@ -14,6 +17,7 @@ import com.eric.hystrix.command.GetProductInfosCommand;
 import com.eric.hystrix.command.GetProductTestCircuitBreakerCommand;
 import com.eric.hystrix.model.ProductInfo;
 import com.eric.hystrix.utils.HttpClientUtils;
+import com.netflix.hystrix.HystrixCollapser;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.hystrix.HystrixObservableCommand;
 
@@ -22,17 +26,17 @@ import rx.Observer;
 
 /**
  * 缓存服务控制类
+ * 
  * @author pxl
  *
  */
 @Controller
 @RequestMapping("cache")
 public class CacheController {
-	
+
 	/**
-	 * 没有做资源隔离的缓存服务调用商品服务接口
-	 * 若商品服务响应过慢会导致调用线程短时间无法释放,必须等超时
-	 * 并发量大的情况会耗尽所有线程导致其他服务部可用
+	 * 没有做资源隔离的缓存服务调用商品服务接口 若商品服务响应过慢会导致调用线程短时间无法释放,必须等超时 并发量大的情况会耗尽所有线程导致其他服务部可用
+	 * 
 	 * @param productId
 	 * @return
 	 */
@@ -44,9 +48,10 @@ public class CacheController {
 		System.out.println(productJson);
 		return "success";
 	}
-	
+
 	/**
 	 * 使用hystrix做资源隔离(同步)请求商品服务的http接口获得单个商品信息
+	 * 
 	 * @param productId
 	 * @return
 	 */
@@ -54,7 +59,7 @@ public class CacheController {
 	@ResponseBody
 	public String getProductInfoWithHystrixSync(Long productId) {
 		HystrixCommand<ProductInfo> command1 = new GetProductInfoCommand(productId);
-		//同步调用command中的run方法
+		// 同步调用command中的run方法
 		ProductInfo productInfo;
 		try {
 			productInfo = command1.execute();
@@ -69,9 +74,10 @@ public class CacheController {
 		}
 		return "success";
 	}
-	
+
 	/**
 	 * 使用hystrix做资源隔离(异步)请求商品服务的http接口获得单个商品信息
+	 * 
 	 * @param productId
 	 * @return
 	 */
@@ -79,13 +85,13 @@ public class CacheController {
 	@ResponseBody
 	public String getProductInfoWithHystrixAsync(Long productId) {
 		HystrixCommand<ProductInfo> command = new GetProductInfoCommand(productId);
-		//异步调用command中的run方法
+		// 异步调用command中的run方法
 		Future<ProductInfo> queue = command.queue();
 		try {
-			//此处可以执行其他业务逻辑
+			// 此处可以执行其他业务逻辑
 			Thread.sleep(1000);
-			//异步线程执行完成后获取返回值
-			while(queue.isDone()) {
+			// 异步线程执行完成后获取返回值
+			while (queue.isDone()) {
 				ProductInfo productInfo = queue.get();
 				System.out.println(productInfo);
 				break;
@@ -96,9 +102,10 @@ public class CacheController {
 		}
 		return "success";
 	}
-	
+
 	/**
 	 * 使用hystrix做资源隔离请求商品服务的http接口获得多个商品信息
+	 * 
 	 * @param productId
 	 * @return
 	 */
@@ -108,28 +115,27 @@ public class CacheController {
 		HystrixObservableCommand<ProductInfo> command = new GetProductInfosCommand(productIds.split(","));
 		Observable<ProductInfo> observable = command.observe();
 		// 等到调用subscribe然后才会执行
-		observable.subscribe(new Observer<ProductInfo>() { 
-			
+		observable.subscribe(new Observer<ProductInfo>() {
+
 			public void onCompleted() {
 				System.out.println("获取完了所有的商品数据");
 			}
-			
+
 			public void onError(Throwable e) {
 				e.printStackTrace();
 			}
-			
+
 			public void onNext(ProductInfo productInfo) {
-				System.out.println(productInfo);  
+				System.out.println(productInfo);
 			}
-			
+
 		});
 		return "success";
 	}
-	
+
 	/**
-	 * 对于一次请求的重复数据走hystrix请求缓存
-	 * 不再重复执行相关查询方法
-	 * 如productids=1,1,2,3,1,3
+	 * 对于一次请求的重复数据走hystrix请求缓存 不再重复执行相关查询方法 如productids=1,1,2,3,1,3
+	 * 
 	 * @param productIds
 	 * @return
 	 */
@@ -137,7 +143,7 @@ public class CacheController {
 	@ResponseBody
 	public String getProductInfosWithRequestCache(String productIds) {
 		try {
-			for(String productId : productIds.split(",")) {
+			for (String productId : productIds.split(",")) {
 				GetProductInfoCommand command = new GetProductInfoCommand(Long.valueOf(productId));
 				ProductInfo product = command.execute();
 				System.out.println(product);
@@ -149,9 +155,10 @@ public class CacheController {
 		}
 		return "success";
 	}
-	
+
 	/**
 	 * 获取商品信息失败使用降级
+	 * 
 	 * @param productId
 	 * @return
 	 */
@@ -159,7 +166,7 @@ public class CacheController {
 	@ResponseBody
 	public String getProductInfoUseFallback(Long productId) {
 		HystrixCommand<ProductInfo> command1 = new GetProductInfoCommand(productId);
-		//同步调用command中的run方法
+		// 同步调用command中的run方法
 		ProductInfo productInfo;
 		try {
 			productInfo = command1.execute();
@@ -174,9 +181,10 @@ public class CacheController {
 		}
 		return "success";
 	}
-	
+
 	/**
 	 * 断路器使用测试
+	 * 
 	 * @param productId
 	 * @return
 	 */
@@ -188,9 +196,10 @@ public class CacheController {
 		System.out.println(productInfo);
 		return "success";
 	}
-	
+
 	/**
 	 * 服务限流拒绝访问后的服务降级
+	 * 
 	 * @param productId
 	 * @return
 	 */
@@ -200,6 +209,32 @@ public class CacheController {
 		HystrixCommand<ProductInfo> command = new GetProductInfoTestRejectCommand(productId);
 		ProductInfo productInfo = command.execute();
 		System.out.println(productInfo);
+		return "success";
+	}
+
+	/**
+	 * 请求合并获取商品信息
+	 * 
+	 * @param productId
+	 * @return
+	 */
+	@RequestMapping("getProductInfosRequestCollapser")
+	@ResponseBody
+	public String getProductInfosRequestCollapser(String productIds) {
+		List<Future<ProductInfo>> futures = new ArrayList<Future<ProductInfo>>();
+		for (String productId : productIds.split(",")) {
+			HystrixCollapser<List<ProductInfo>, ProductInfo, Long> collapser = new GetProductInfosCollapser(
+					Long.valueOf(productId));
+			futures.add(collapser.queue());
+		}
+		for (Future<ProductInfo> future : futures) {
+			try {
+				ProductInfo productInfo = future.get();
+				System.out.println(productInfo);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 		return "success";
 	}
 }
